@@ -12,7 +12,7 @@ export default function Employees() {
   const [employees, setEmployees] = useState(INIT);
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("all");
-  const [modal, setModal] = useState(null); // null | {mode, data}
+  const [modal, setModal] = useState(null);
   const [form, setForm] = useState(EMPTY);
 
   const filtered = employees.filter((e) => {

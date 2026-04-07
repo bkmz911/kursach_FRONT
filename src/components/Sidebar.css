@@ -68,7 +68,7 @@
 .sidebar-footer {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 12px;
   border-radius: 12px;
   background: var(--surface2);
