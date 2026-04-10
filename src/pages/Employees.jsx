@@ -104,7 +104,7 @@ export default function Employees() {
               <th>Дата найма</th>
               <th>Зарплата</th>
               <th>Статус</th>
-              <th></th>
+              <th>...</th>
             </tr>
           </thead>
           <tbody>
