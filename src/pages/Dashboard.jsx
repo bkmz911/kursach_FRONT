@@ -1,189 +1,121 @@
-import { STATS, EMPLOYEES, DEPARTMENTS } from "../data/mock";
-import "./Dashboard.css";
+// src/pages/Dashboard.jsx — версия с бэкендом (SQLite)
+import { useState, useEffect } from "react";
+import { fetchStats } from "../api/api";
+// import { formatSalary } from "../data/employees";
 
-const KPI = [
-  {
-    label: "Всего сотрудников",
-    value: STATS.total,
-    sub: `+${STATS.newThisMonth} в этом месяце`,
-    color: "#4f7cff",
-    icon: (
-      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <circle cx="9" cy="7" r="4"/><path d="M2 21v-1a7 7 0 0 1 14 0v1"/><circle cx="19" cy="7" r="3"/>
-        <path d="M22 21v-1a5 5 0 0 0-3-4.6" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-  {
-    label: "Активны сейчас",
-    value: STATS.active,
-    sub: `${Math.round((STATS.active / STATS.total) * 100)}% от штата`,
-    color: "#00d4aa",
-    icon: (
-      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path d="M22 12h-4l-3 9L9 3l-3 9H2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-  },
-  {
-    label: "Средняя зарплата",
-    value: `${(STATS.avgSalary / 1000).toFixed(0)}К ₽`,
-    sub: "по организации",
-    color: "#ffb347",
-    icon: (
-      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <rect x="2" y="6" width="20" height="14" rx="2"/>
-        <path d="M6 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" strokeLinecap="round"/>
-        <circle cx="12" cy="13" r="2"/>
-      </svg>
-    ),
-  },
-  {
-    label: "Открытых вакансий",
-    value: STATS.openVacancies,
-    sub: `Текучесть: ${STATS.turnover}%`,
-    color: "#ff4d6d",
-    icon: (
-      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <rect x="2" y="7" width="20" height="14" rx="2"/>
-        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" strokeLinecap="round"/>
-        <path d="M12 12v4M10 14h4" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
+const activities = [
+  { text: "Новикова А.П. переведена на должность Senior Backend-разработчика", time: "2 часа назад",  color: "#2e5fa8" },
+  { text: "Козлов Д.А. прошёл аттестацию по итогам года",                      time: "Вчера, 14:30",  color: "#2e8b57" },
+  { text: "Оформлен приём на работу: Сидорова Е.В.",                            time: "3 дня назад",   color: "#c85a2e" },
+  { text: "Обновлён трудовой договор: Иванова М.С.",                            time: "5 дней назад",  color: "#b07d2e" },
 ];
 
-const STATUS_COLORS = { active: "#00d4aa", vacation: "#ffb347", sick: "#ff4d6d" };
-const STATUS_LABEL  = { active: "Работает", vacation: "Отпуск", sick: "Больничный" };
+export default function Dashboard({ navigate }) {
+  const [stats,   setStats  ] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError  ] = useState(null);
 
-export default function Dashboard() {
-  const deptData = DEPARTMENTS.map((d) => ({
-    ...d,
-    pct: Math.round((d.count / STATS.total) * 100),
-  }));
+  useEffect(() => {
+    fetchStats()
+      .then(setStats)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p style={{ color: "var(--text-secondary)", padding: 40 }}>Загрузка…</p>;
+  if (error)   return <p style={{ color: "var(--accent)",         padding: 40 }}>Ошибка: {error}</p>;
 
   return (
-    <div>
+    <div className="fade-in">
       <div className="page-header">
-        <h1>Дашборд</h1>
-        <p>Общая сводка по кадровому составу организации</p>
-      </div>
-
-      {/* KPIs */}
-      <div className="kpi-grid">
-        {KPI.map((k) => (
-          <div className="kpi-card card" key={k.label}>
-            <div className="kpi-icon" style={{ color: k.color, background: k.color + "18" }}>
-              {k.icon}
-            </div>
-            <div className="kpi-value">{k.value}</div>
-            <div className="kpi-label">{k.label}</div>
-            <div className="kpi-sub">{k.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="dash-row">
-        {/* Status breakdown */}
-        <div className="card status-card">
-          <div className="card-title">Статусы сотрудников</div>
-          <div className="status-rings">
-            <div className="ring-chart">
-              <svg viewBox="0 0 120 120" width="120" height="120">
-                <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border)" strokeWidth="14"/>
-                {/* active 88% */}
-                <circle cx="60" cy="60" r="50" fill="none" stroke="#00d4aa" strokeWidth="14"
-                  strokeDasharray={`${(STATS.active/STATS.total)*314} 314`}
-                  strokeLinecap="round" transform="rotate(-90 60 60)"/>
-                <text x="60" y="56" textAnchor="middle" fill="var(--text)" fontSize="18" fontWeight="700" fontFamily="Geologica">
-                  {STATS.active}
-                </text>
-                <text x="60" y="70" textAnchor="middle" fill="var(--muted)" fontSize="9" fontFamily="Geologica">
-                  активны
-                </text>
-              </svg>
-            </div>
-            <div className="status-list">
-              {[
-                { label: "Работает",   val: STATS.active,     color: "#00d4aa" },
-                { label: "В отпуске",  val: STATS.onVacation, color: "#ffb347" },
-                { label: "Больничный", val: STATS.onSick,     color: "#ff4d6d" },
-              ].map((s) => (
-                <div className="status-row" key={s.label}>
-                  <span className="status-dot" style={{ background: s.color }}/>
-                  <span className="status-label">{s.label}</span>
-                  <span className="status-val">{s.val}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div>
+          <h1>Дашборд</h1>
+          <p>Обзор кадрового состава организации</p>
         </div>
+        <button className="btn btn-primary" onClick={() => navigate("employee-form", null)}>
+          ＋ &nbsp;Добавить сотрудника
+        </button>
+      </div>
 
-        {/* Department bar chart */}
-        <div className="card dept-card">
-          <div className="card-title">Численность по отделам</div>
-          <div className="bar-list">
-            {deptData.map((d, i) => (
-              <div className="bar-item" key={d.id}>
-                <div className="bar-name">{d.name}</div>
-                <div className="bar-track">
-                  <div
-                    className="bar-fill"
-                    style={{
-                      width: `${d.pct}%`,
-                      background: `hsl(${220 + i * 20}, 80%, 65%)`,
-                      animationDelay: `${i * 0.08}s`,
-                    }}
-                  />
-                </div>
-                <div className="bar-count">{d.count}</div>
+      <div className="stats-grid">
+        <div className="stat-card orange">
+          <div className="stat-icon">👤</div>
+          <div className="stat-value">{stats.total}</div>
+          <div className="stat-label">Всего сотрудников</div>
+          <div className="stat-delta up">↑ актуально</div>
+        </div>
+        <div className="stat-card green">
+          <div className="stat-icon">✅</div>
+          <div className="stat-value">{stats.active}</div>
+          <div className="stat-label">Работают сейчас</div>
+          <div className="stat-delta up">↑ в штате</div>
+        </div>
+        <div className="stat-card blue">
+          <div className="stat-icon">🏢</div>
+          <div className="stat-value">{stats.departments.length}</div>
+          <div className="stat-label">Отделов</div>
+          <div className="stat-delta neutral">структура</div>
+        </div>
+        <div className="stat-card gold">
+          <div className="stat-icon">💼</div>
+          <div className="stat-value">{stats.probation}</div>
+          <div className="stat-label">На испытательном</div>
+          <div className="stat-delta neutral">на контроле</div>
+        </div>
+      </div>
+
+      <div className="two-col">
+        <div className="section-card">
+          <h3>Последние события</h3>
+          {activities.map((a, i) => (
+            <div className="activity-item" key={i}>
+              <div className="activity-dot" style={{ background: a.color }} />
+              <div>
+                <div className="activity-text">{a.text}</div>
+                <div className="activity-time">{a.time}</div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-      </div>
 
-      {/* Recent employees */}
-      <div className="card" style={{ marginTop: 24 }}>
-        <div className="card-title">Последние сотрудники</div>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Сотрудник</th>
-              <th>Должность</th>
-              <th>Отдел</th>
-              <th>Статус</th>
-              <th>Зарплата</th>
-            </tr>
-          </thead>
-          <tbody>
-            {EMPLOYEES.slice(0, 6).map((e) => (
-              <tr key={e.id}>
-                <td>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div className="avatar" style={{ background: e.color + "22", color: e.color }}>
-                      {e.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                    </div>
-                    {e.name}
-                  </div>
-                </td>
-                <td style={{ color: "var(--muted)" }}>{e.role}</td>
-                <td>{e.dept}</td>
-                <td>
-                  <span className="tag" style={{
-                    background: STATUS_COLORS[e.status] + "18",
-                    color: STATUS_COLORS[e.status],
-                  }}>
-                    {STATUS_LABEL[e.status]}
-                  </span>
-                </td>
-                <td style={{ fontFamily: "JetBrains Mono", fontSize: "0.85rem" }}>
-                  {e.salary.toLocaleString("ru-RU")} ₽
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="section-card">
+          <h3>Сводка по ФОТ</h3>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 6 }}>
+              Фонд оплаты труда (в штате)
+            </div>
+            <div style={{ fontFamily: "Fraunces, serif", fontSize: 32, fontWeight: 700 }}>
+              {/* {formatSalary(stats.totalSalary)} */}
+              total salary
+            </div>
+          </div>
+
+          {/* stats.departments — массив из SQLite, поля: name, count, total_salary */}
+          {stats.departments.map((dept) => {
+            const pct = stats.totalSalary > 0
+              ? Math.round((dept.total_salary / stats.totalSalary) * 100)
+              : 0;
+            return (
+              <div key={dept.name} style={{ marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
+                  <span style={{ color: "var(--text-secondary)" }}>{dept.name}</span>
+                  <span style={{ fontWeight: 500 }}>{pct}%</span>
+                </div>
+                <div className="dept-fill">
+                  <div className="dept-fill-bar" style={{ width: `${pct}%`, background: "var(--text-primary)" }} />
+                </div>
+              </div>
+            );
+          })}
+
+          <button
+            className="btn btn-secondary"
+            style={{ width: "100%", justifyContent: "center", marginTop: 20 }}
+            onClick={() => navigate("employees")}
+          >
+            Все сотрудники →
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,214 +1,168 @@
-import { useState } from "react";
-import { EMPLOYEES as INIT, DEPARTMENTS } from "../data/mock";
+// src/pages/Employees.jsx — версия с бэкендом (SQLite)
+// Поля от бэкенда: id, name, position, department, email, phone,
+//                  hire_date, salary, status, notes, created_at, updated_at
+import { useState, useEffect, useCallback } from "react";
+import { fetchEmployees, deleteEmployee } from "../api/api";
+// import {
+//   getInitials, getAvatarColor,
+//   formatSalary, formatDate,
+//   DEPT_CLASSES, STATUS_LABELS,
+// } from "../data/employees";
 
-const STATUS_COLORS = { active: "#00d4aa", vacation: "#ffb347", sick: "#ff4d6d" };
-const STATUS_LABEL  = { active: "Работает", vacation: "Отпуск", sick: "Больничный" };
+export default function Employees({ navigate }) {
+  const [employees,    setEmployees   ] = useState([]);
+  const [total,        setTotal       ] = useState(0);
+  const [loading,      setLoading     ] = useState(true);
+  const [error,        setError       ] = useState(null);
+  const [search,       setSearch      ] = useState("");
+  const [filterDept,   setFilterDept  ] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
 
-const AVATAR_COLORS = ["#4f7cff","#00d4aa","#ff6b8a","#ffb347","#a78bfa","#34d399","#f472b6","#60a5fa","#fb923c","#e879f9"];
+  const load = useCallback(() => {
+    setLoading(true);
+    fetchEmployees({ search, department: filterDept, status: filterStatus })
+      .then(({ employees: list, total: t }) => {
+        setEmployees(list);
+        setTotal(t);
+        setError(null);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [search, filterDept, filterStatus]);
 
-const EMPTY = { name: "", dept: "", role: "", salary: "", status: "active", hired: "" };
+  useEffect(() => { load(); }, [load]);
 
-export default function Employees() {
-  const [employees, setEmployees] = useState(INIT);
-  const [search, setSearch] = useState("");
-  const [filterDept, setFilterDept] = useState("all");
-  const [modal, setModal] = useState(null);
-  const [form, setForm] = useState(EMPTY);
+  const handleDelete = async (id) => {
+    if (!confirm("Удалить сотрудника из системы?")) return;
+    try   { await deleteEmployee(id); load(); }
+    catch (e) { alert("Ошибка удаления: " + e.message); }
+  };
 
-  const filtered = employees.filter((e) => {
-    const q = search.toLowerCase();
-    const matchQ = e.name.toLowerCase().includes(q) || e.role.toLowerCase().includes(q);
-    const matchD = filterDept === "all" || e.dept === filterDept;
-    return matchQ && matchD;
-  });
+  const statusBadge = (status) => {
+    const cls = status === "active" ? "badge-active" : status === "probation" ? "badge-probation" : "badge-inactive";
+    const dot = status === "active" ? "🟢" : status === "probation" ? "🟡" : "⚪";
+    // return <span className={`badge ${cls}`}>{dot} {STATUS_LABELS[status]}</span>;
+    return <span className={`badge ${cls}`}>{dot} status labels</span>;
+  };
 
-  function openAdd() {
-    setForm(EMPTY);
-    setModal({ mode: "add" });
-  }
-  function openEdit(emp) {
-    setForm({ ...emp, salary: String(emp.salary) });
-    setModal({ mode: "edit", id: emp.id });
-  }
-  function closeModal() { setModal(null); }
-
-  function handleSave() {
-    if (!form.name || !form.dept || !form.role) return;
-    if (modal.mode === "add") {
-      const newEmp = {
-        ...form,
-        id: Date.now(),
-        salary: Number(form.salary) || 0,
-        color: AVATAR_COLORS[employees.length % AVATAR_COLORS.length],
-      };
-      setEmployees([...employees, newEmp]);
-    } else {
-      setEmployees(employees.map((e) =>
-        e.id === modal.id ? { ...e, ...form, salary: Number(form.salary) || e.salary } : e
-      ));
-    }
-    closeModal();
-  }
-
-  function handleDelete(id) {
-    setEmployees(employees.filter((e) => e.id !== id));
-  }
+  // Цвет аватара детерминирован по первому символу id (число)
+//   const avatarColor = (id) => getAvatarColor(id % 6);
 
   return (
-    <div>
+    <div className="fade-in">
       <div className="page-header">
-        <h1>Сотрудники</h1>
-        <p>Управление кадровым составом организации</p>
-      </div>
-
-      <div className="toolbar">
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <div className="search-bar">
-            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" strokeLinecap="round"/>
-            </svg>
-            <input
-              placeholder="Поиск по имени, должности..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <select
-            value={filterDept}
-            onChange={(e) => setFilterDept(e.target.value)}
-            style={{
-              background: "var(--surface2)", border: "1px solid var(--border)",
-              borderRadius: 10, color: "var(--text)", padding: "8px 14px",
-              fontFamily: "Geologica", fontSize: "0.875rem", outline: "none",
-            }}
-          >
-            <option value="all">Все отделы</option>
-            {DEPARTMENTS.map((d) => <option key={d.id} value={d.name}>{d.name}</option>)}
-          </select>
+        <div>
+          <h1>Сотрудники</h1>
+          <p>{loading ? "Загрузка…" : `${employees.length} из ${total} записей`}</p>
         </div>
-        <button className="btn btn-primary" onClick={openAdd}>
-          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path d="M12 5v14M5 12h14" strokeLinecap="round"/>
-          </svg>
-          Добавить сотрудника
+        <button className="btn btn-primary" onClick={() => navigate("employee-form", null)}>
+          ＋ &nbsp;Добавить
         </button>
       </div>
 
-      <div className="card">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Сотрудник</th>
-              <th>Должность</th>
-              <th>Отдел</th>
-              <th>Дата найма</th>
-              <th>Зарплата</th>
-              <th>Статус</th>
-              <th>...</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
+      <div className="table-card">
+        <div className="table-toolbar">
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <label className="search-box">
+              🔍
+              <input
+                placeholder="Поиск по имени, должности..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </label>
+            <select
+              style={{ padding: "9px 14px", borderRadius: "var(--radius-sm)", border: "1.5px solid var(--border)", background: "var(--bg)", fontFamily: "DM Sans, sans-serif", fontSize: 14, color: "var(--text-primary)", cursor: "pointer" }}
+              value={filterDept}
+              onChange={(e) => setFilterDept(e.target.value)}
+            >
+              <option value="">Все отделы</option>
+              {["ИТ-отдел", "HR-отдел", "Финансы", "Маркетинг", "Операции"].map((d) => (
+                <option key={d}>{d}</option>
+              ))}
+            </select>
+            <select
+              style={{ padding: "9px 14px", borderRadius: "var(--radius-sm)", border: "1.5px solid var(--border)", background: "var(--bg)", fontFamily: "DM Sans, sans-serif", fontSize: 14, color: "var(--text-primary)", cursor: "pointer" }}
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="">Все статусы</option>
+              <option value="active">Работает</option>
+              <option value="probation">Испытательный</option>
+              <option value="inactive">Уволен</option>
+            </select>
+          </div>
+        </div>
+
+        {error && (
+          <div style={{ padding: 24, color: "var(--accent)", fontSize: 14 }}>Ошибка: {error}</div>
+        )}
+
+        {!error && !loading && employees.length === 0 && (
+          <div className="empty-state">
+            <div className="empty-icon">🔍</div>
+            <h3>Сотрудники не найдены</h3>
+            <p>Попробуйте изменить параметры поиска</p>
+          </div>
+        )}
+
+        {!error && employees.length > 0 && (
+          <table>
+            <thead>
               <tr>
-                <td colSpan={7} style={{ textAlign: "center", color: "var(--muted)", padding: "40px 0" }}>
-                  Ничего не найдено
-                </td>
+                <th>Сотрудник</th>
+                <th>Должность</th>
+                <th>Отдел</th>
+                <th>Оклад</th>
+                <th>Дата приёма</th>
+                <th>Статус</th>
+                <th>Действия</th>
               </tr>
-            ) : (
-              filtered.map((e) => (
-                <tr key={e.id}>
+            </thead>
+            <tbody>
+              {employees.map((emp) => (
+                <tr key={emp.id}>
                   <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div className="avatar" style={{ background: e.color + "22", color: e.color }}>
-                        {e.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                    <div className="employee-cell">
+                      {/* <div className="emp-avatar" style={{ background: avatarColor(emp.id) }}> */}
+                      <div className="emp-avatar">
+                        {/* {getInitials(emp.name)} */}
+                        {/* {getInitials(emp.name)} */}
+                        emp name
                       </div>
-                      <span style={{ fontWeight: 500 }}>{e.name}</span>
+                      <div>
+                        <div className="emp-name">{emp.name}</div>
+                        <div className="emp-id">{emp.email}</div>
+                      </div>
                     </div>
                   </td>
-                  <td style={{ color: "var(--muted)" }}>{e.role}</td>
-                  <td>{e.dept}</td>
-                  <td style={{ fontFamily: "JetBrains Mono", fontSize: "0.8rem", color: "var(--muted)" }}>
-                    {new Date(e.hired).toLocaleDateString("ru-RU")}
-                  </td>
-                  <td style={{ fontFamily: "JetBrains Mono", fontSize: "0.85rem" }}>
-                    {Number(e.salary).toLocaleString("ru-RU")} ₽
-                  </td>
+                  <td style={{ color: "var(--text-secondary)" }}>{emp.position}</td>
                   <td>
-                    <span className="tag" style={{ background: STATUS_COLORS[e.status] + "18", color: STATUS_COLORS[e.status] }}>
-                      {STATUS_LABEL[e.status]}
+                    {/* <span className={`badge ${DEPT_CLASSES[emp.department] || ""}`}> */}
+                    <span className={`badge`}>
+                      {emp.department}
                     </span>
                   </td>
+                  {/* <td style={{ fontWeight: 500 }}>{formatSalary(emp.salary)}</td> */}
+                  <td style={{ fontWeight: 500 }}>format salary</td>
+                  {/* SQLite возвращает hire_date, не hireDate */}
+                  {/* <td style={{ color: "var(--text-secondary)" }}>{formatDate(emp.hire_date)}</td> */}
+                  <td style={{ color: "var(--text-secondary)" }}>format date</td>
+                  <td>{statusBadge(emp.status)}</td>
                   <td>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button className="btn btn-ghost" style={{ padding: "6px 12px", fontSize: "0.8rem" }} onClick={() => openEdit(e)}>
-                        Ред.
-                      </button>
-                      <button
-                        onClick={() => handleDelete(e.id)}
-                        style={{
-                          background: "rgba(255,77,109,0.1)", border: "none", borderRadius: 8,
-                          color: "var(--danger)", padding: "6px 10px", cursor: "pointer", fontSize: "0.85rem",
-                        }}
-                      >
-                        ✕
-                      </button>
+                    <div className="action-btns">
+                      <button className="icon-btn" title="Редактировать"
+                        onClick={() => navigate("employee-form", emp)}>✏️</button>
+                      <button className="icon-btn danger" title="Удалить"
+                        onClick={() => handleDelete(emp.id)}>🗑️</button>
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
-
-      {modal && (
-        <div className="modal-backdrop" onClick={closeModal}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>{modal.mode === "add" ? "Добавить сотрудника" : "Редактировать сотрудника"}</h2>
-            <div className="form-group">
-              <label>ФИО *</label>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Иванов Иван Иванович"/>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div className="form-group">
-                <label>Отдел *</label>
-                <select value={form.dept} onChange={(e) => setForm({ ...form, dept: e.target.value })}>
-                  <option value="">Выберите отдел</option>
-                  {DEPARTMENTS.map((d) => <option key={d.id} value={d.name}>{d.name}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Статус</label>
-                <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                  <option value="active">Работает</option>
-                  <option value="vacation">Отпуск</option>
-                  <option value="sick">Больничный</option>
-                </select>
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Должность *</label>
-              <input value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder="Senior Developer"/>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div className="form-group">
-                <label>Зарплата (₽)</label>
-                <input type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} placeholder="120000"/>
-              </div>
-              <div className="form-group">
-                <label>Дата найма</label>
-                <input type="date" value={form.hired} onChange={(e) => setForm({ ...form, hired: e.target.value })}/>
-              </div>
-            </div>
-            <div className="modal-actions">
-              <button className="btn btn-ghost" onClick={closeModal}>Отмена</button>
-              <button className="btn btn-primary" onClick={handleSave}>
-                {modal.mode === "add" ? "Добавить" : "Сохранить"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -3,7 +3,6 @@ import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
 import Departments from "./pages/Departments";
-import Vacancies from "./pages/Vacancies";
 import "./App.css";
 
 export default function App() {
@@ -13,7 +12,6 @@ export default function App() {
     dashboard: <Dashboard />,
     employees: <Employees />,
     departments: <Departments />,
-    vacancies: <Vacancies />,
   };
 
   return (
