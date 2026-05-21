@@ -1,7 +1,5 @@
-# 📚 **Kursach Frontend** – HR Management System
+# 📚 **Управление кадрами организации (Frontend)** – HR Management System
 
-![GitHub License](https://img.shields.io/github/license/yourusername/kursach_FRONT?color=blue)  
-![GitHub Stars](https://img.shields.io/github/stars/yourusername/kursach_FRONT?style=social)  
 ![Node.js](https://img.shields.io/badge/Node.js-20.x-green)  
 ![React](https://img.shields.io/badge/React-18.x-61DAFB)  
 ![Vite](https://img.shields.io/badge/Vite-5.x-646CFF)
@@ -95,25 +93,3 @@ export default defineConfig({
 });
 ```
 Если бекенд работает на другом порту/хосте, отредактируйте значение `target`.
-
----
-
-## 📸 Превью интерфейса
-![Frontend preview](file:///C:/Users/User/.gemini/antigravity/artifacts/frontend_preview.png)
-
----
-
-## 🧩 Что дальше?
-- Добавьте аутентификацию (JWT) и защиту роутов.
-- Реализуйте глобальное состояние с Redux Toolkit или Zustand.
-- Напишите e2e‑тесты с Cypress.
-- Подключите CI/CD (GitHub Actions) для автоматической проверки сборки.
-
----
-
-## 📄 Лицензия
-Проект распространяется под лицензией MIT. Подробнее в файле `LICENSE`.
-
----
-
-*Создано в рамках курсовой работы – фронтенд‑часть HR‑системы.*
