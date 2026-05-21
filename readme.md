@@ -40,6 +40,7 @@
 ```bash
 # 1️⃣ Клонируйте репозиторий
 git clone https://github.com/yourusername/kursach_FRONT.git
+git clone https://github.com/yourusername/kursach_BACK.git ../kursach_BACK
 cd kursach_FRONT
 
 # 2️⃣ Установите зависимости
