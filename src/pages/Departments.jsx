@@ -3,7 +3,7 @@
 //                          employee_count, total_salary, avg_salary, probation_count
 import { useState, useEffect } from "react";
 import { fetchDepartments } from "../api/api";
-// import { DEPT_ICONS } from "../data/employees";
+import { DEPT_ICONS } from "../data/employees";
 
 const DEPT_COLORS = {
   "ИТ-отдел":  { bar: "#2e5fa8", bg: "#e0eaf8" },
@@ -52,8 +52,7 @@ export default function Departments() {
                 background: colors.bg, width: 52, height: 52, borderRadius: 12,
                 display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24,
               }}>
-                {/* {DEPT_ICONS[dept.name] || "🏢"} */}
-                🏢
+                {DEPT_ICONS[dept.name] || "🏢"}
               </div>
 
               <h3 style={{ marginTop: 14 }}>{dept.name}</h3>

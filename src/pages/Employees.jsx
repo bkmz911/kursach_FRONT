@@ -3,11 +3,11 @@
 //                  hire_date, salary, status, notes, created_at, updated_at
 import { useState, useEffect, useCallback } from "react";
 import { fetchEmployees, deleteEmployee } from "../api/api";
-// import {
-//   getInitials, getAvatarColor,
-//   formatSalary, formatDate,
-//   DEPT_CLASSES, STATUS_LABELS,
-// } from "../data/employees";
+import {
+  getInitials, getAvatarColor,
+  formatSalary, formatDate,
+  DEPT_CLASSES, STATUS_LABELS,
+} from "../data/employees";
 
 export default function Employees({ navigate }) {
   const [employees,    setEmployees   ] = useState([]);
@@ -41,12 +41,11 @@ export default function Employees({ navigate }) {
   const statusBadge = (status) => {
     const cls = status === "active" ? "badge-active" : status === "probation" ? "badge-probation" : "badge-inactive";
     const dot = status === "active" ? "🟢" : status === "probation" ? "🟡" : "⚪";
-    // return <span className={`badge ${cls}`}>{dot} {STATUS_LABELS[status]}</span>;
-    return <span className={`badge ${cls}`}>{dot} status labels</span>;
+    return <span className={`badge ${cls}`}>{dot} {STATUS_LABELS[status]}</span>;
   };
 
   // Цвет аватара детерминирован по первому символу id (число)
-//   const avatarColor = (id) => getAvatarColor(id % 6);
+  const avatarColor = (id) => getAvatarColor(id % 6);
 
   return (
     <div className="fade-in">
@@ -124,11 +123,8 @@ export default function Employees({ navigate }) {
                 <tr key={emp.id}>
                   <td>
                     <div className="employee-cell">
-                      {/* <div className="emp-avatar" style={{ background: avatarColor(emp.id) }}> */}
-                      <div className="emp-avatar">
-                        {/* {getInitials(emp.name)} */}
-                        {/* {getInitials(emp.name)} */}
-                        emp name
+                      <div className="emp-avatar" style={{ background: avatarColor(emp.id) + "22", color: avatarColor(emp.id) }}>
+                        {getInitials(emp.name)}
                       </div>
                       <div>
                         <div className="emp-name">{emp.name}</div>
@@ -138,16 +134,13 @@ export default function Employees({ navigate }) {
                   </td>
                   <td style={{ color: "var(--text-secondary)" }}>{emp.position}</td>
                   <td>
-                    {/* <span className={`badge ${DEPT_CLASSES[emp.department] || ""}`}> */}
-                    <span className={`badge`}>
+                    <span className={`badge ${DEPT_CLASSES[emp.department] || ""}`}>
                       {emp.department}
                     </span>
                   </td>
-                  {/* <td style={{ fontWeight: 500 }}>{formatSalary(emp.salary)}</td> */}
-                  <td style={{ fontWeight: 500 }}>format salary</td>
+                  <td style={{ fontWeight: 500 }}>{formatSalary(emp.salary)}</td>
                   {/* SQLite возвращает hire_date, не hireDate */}
-                  {/* <td style={{ color: "var(--text-secondary)" }}>{formatDate(emp.hire_date)}</td> */}
-                  <td style={{ color: "var(--text-secondary)" }}>format date</td>
+                  <td style={{ color: "var(--text-secondary)" }}>{formatDate(emp.hire_date)}</td>
                   <td>{statusBadge(emp.status)}</td>
                   <td>
                     <div className="action-btns">

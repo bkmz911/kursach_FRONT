@@ -1,7 +1,7 @@
 // src/pages/Dashboard.jsx — версия с бэкендом (SQLite)
 import { useState, useEffect } from "react";
 import { fetchStats } from "../api/api";
-// import { formatSalary } from "../data/employees";
+import { formatSalary } from "../data/employees";
 
 const activities = [
   { text: "Новикова А.П. переведена на должность Senior Backend-разработчика", time: "2 часа назад",  color: "#2e5fa8" },
@@ -85,8 +85,7 @@ export default function Dashboard({ navigate }) {
               Фонд оплаты труда (в штате)
             </div>
             <div style={{ fontFamily: "Fraunces, serif", fontSize: 32, fontWeight: 700 }}>
-              {/* {formatSalary(stats.totalSalary)} */}
-              total salary
+              {formatSalary(stats.totalSalary)}
             </div>
           </div>
 
