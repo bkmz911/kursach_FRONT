@@ -30,7 +30,7 @@ export default function Dashboard({ navigate }) {
       <div className="page-header">
         <div>
           <h1>Дашборд</h1>
-          <p>Обзор кадрового состава организации</p>
+          <p style={{"padding-top": "10px", "padding-bottom": "10px"}}>Обзор кадрового состава организации</p>
         </div>
         <button className="btn btn-primary" onClick={() => navigate("employee-form", null)}>
           ＋ &nbsp;Добавить сотрудника
